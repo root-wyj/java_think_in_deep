@@ -24,7 +24,7 @@
  - `TIMED_WAITING`  这个状态就是有限的(时间限制)的WAITING, 一般出现在调用wait(long), join(long)等情况下, 另外一个线程sleep后, 也会进入TIMED_WAITING状态
 
  - `TERMINATED` 这个状态下表示 该线程的run方法已经执行完毕了, 基本上就等于死亡了(当时如果线程被持久持有, 可能不会被回收)
-
+<br>
 
 ## 等待队列与锁池
 1. 调用obj的wait、notify方法前，必须获得obj锁，也就是必须在synchronized(obj)代码块内。
@@ -34,7 +34,7 @@
 
  与等待队列和锁池的相关步骤图：
 ![|center](http://dl.iteye.com/upload/picture/pic/116721/3f19f0fb-33ae-322f-9f6a-035f0bf3a2d5.jpg)
-
+<br>
 
 -------------
 
