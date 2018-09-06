@@ -3,15 +3,15 @@
 !pom.xml
 !/src
 
-###exclude-eclipse
+###exclude
 mvnw
 mvnw.cmd
 .mvn/*
 .idea/*
 target/
+.project
+.classpath
 bin/
-###.project
-###.classpath
 
 ### STS ###
 .apt_generated
