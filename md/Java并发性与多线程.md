@@ -29,7 +29,7 @@
 
 ### 并行工作者模型
 
-![|center](http://tutorials.jenkov.com/images/java-concurrency/concurrency-models-1.png)
+![|center](https://github.com/root-wyj/java_think_in_deep/blob/master/md/images/concurrency-models-1.png)
 
 **并行工作者模型中，委派者（Delegator）将传入的作业分配给不同的工作者。每个工作者完成整个任务。工作者们并行运作在不同的线程上，甚至可能在不同的CPU上。**
 
@@ -37,7 +37,7 @@
 
 但是如果涉及到共享状态，就会变得复杂：
 
-![|center](http://tutorials.jenkov.com/images/java-concurrency/concurrency-models-2.png)
+![|center](https://github.com/root-wyj/java_think_in_deep/blob/master/md/images/concurrency-models-2.png)
 
 共享状态会被多个线程操作，涉及到线程同步的问题。在Java中就可能会涉及竟态、死锁，也可能发生阻塞，影响程序执行的效率。
 
@@ -47,17 +47,17 @@
 
 ### 流水线模型
 
-![|center](http://tutorials.jenkov.com/images/java-concurrency/concurrency-models-3.png)
+![|center](https://github.com/root-wyj/java_think_in_deep/blob/master/md/images/concurrency-models-3.png)
 
 将上面模式中的worker串联起来，变成一个个流水线，而每一个流水线是一个线程。每一个加工数据的工厂是不保存数据的，他们就像是加工数据的管道一样，线程中的数据经过一次次加工，最后变成了想要的数据。比如说Java中的`Servlet`。
 
 由于大多数系统可以执行多个作业，作业从一个工作者流向另一个工作者取决于作业需要做的工作。在实际中可能会有多个不同的虚拟流水线同时运行。
 
-![|center](http://tutorials.jenkov.com/images/java-concurrency/concurrency-models-5.png)
+![|center](https://github.com/root-wyj/java_think_in_deep/blob/master/md/images/concurrency-models-5.png)
 
 作业甚至也有可能被转发到超过一个工作者上并发处理。比如说，作业有可能被同时转发到作业执行器和作业日志器。比如下图：
 
-![|center](http://tutorials.jenkov.com/images/java-concurrency/concurrency-models-6.png)
+![|center](https://github.com/root-wyj/java_think_in_deep/blob/master/md/images/concurrency-models-6.png)
 
 当简单的流水线模型复杂到这个程度的时候，就有必要请出流水线模型的升级版模型--`反应器、事件驱动模型`
 
@@ -70,14 +70,14 @@
 
 如果说流水线模型的实现是线性的或者是链式的（责任链模式？比如Spring处理httpRequest的filter-chain），那么反应器、事件驱动模型就是基于监听者模式的，每一个工作者需要向自己感兴趣的工作者注册，当自己感兴趣的工作者收到消息之后，自然会通知本工作者去处理该消息。像下图一样：
 
-![|center](http://tutorials.jenkov.com/images/java-concurrency/concurrency-models-7.png)
+![|center](https://github.com/root-wyj/java_think_in_deep/blob/master/md/images/concurrency-models-7.png)
 
 更复杂的，比如说工作者虽然都是一大类，但是性质也不同，在这一道工序中，有的工作者专门处理水果，有的工作者专门处理蔬菜，而在下一道工序中，水果和蔬菜又被看做一种东西，需要这道工序中的一类工作者处理就可以了。那么第二道工序中的工作者就需要去监听多个工作者。就像上图一样。
 
 
 上面说的是无状态的反应器、事件驱动模型，另外一种就是工作者是一个个的线程，根据工序的复杂度不同，启动不同数量的相应工序的工作者，然后工作者之间也不会直接通信，他们在不同的通道中发布自己的消息，其他工作者只监听这些通道中的消息。（有点像复杂、解耦版的并行工作者模型）
 
-![|center](http://tutorials.jenkov.com/images/java-concurrency/concurrency-models-8.png)
+![|center](https://github.com/root-wyj/java_think_in_deep/blob/master/md/images/concurrency-models-8.png)
 
 
 <br>
