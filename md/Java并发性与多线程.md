@@ -169,18 +169,61 @@ Java中，线程间通信是通过共享内存的方式实现的。
 
 ## Java中线程间基本同步方式
 
-`volatile` 关键字
+<br>
+**`volatile` 关键字**
 [深入理解Java中的volatile关键字](http://www.hollischuang.com/archives/2648)
+
 [再有人问你volatile是什么，把这篇文章也发给他。](http://www.hollischuang.com/archives/2673)
 
-`synchronized` 关键字
-[再有人问你synchronized是什么，就把这篇文章发给他。]http://www.hollischuang.com/archives/2637()
-
-
-`CAS` 原子操作
+<br>
+**`synchronized` 关键字**
+[再有人问你synchronized是什么，就把这篇文章发给他。](http://www.hollischuang.com/archives/2637)
 
 
 <br>
+**`CAS` 原子操作**
+
+`CAS(Compare And Swap)`现在操作系统已经提供了这样操作的原子指令。
+
+这也是一种乐观锁的实现，将修改前的值与现在的值比较，相同则改成目标值，不相同再重新读取并修改，然后再将修改前的值与现在的值比较，相同则改成目标值，如此循环，直到该成功为止。这也是乐观锁的实现方式。
+
+<br>
+**`wait 与 notify`**
+
+`wait notify notifyAll`都必须要在同步代码块`synchronized`中执行。
+
+JVM在调用wait等方法的时候，首先会检查当前线程是否是锁的拥有者，否则抛出IllegalMonitorStateException。
+
+调用`wait`之后，当前线程会释放监视器对象上的锁。一旦一个`wait`的线程被唤醒，并不能立刻退出`wait`方法的调用，需要等到`notify`的线程退出自己的同步代码块，释放监视器对象上的锁，然后被唤醒的`wait`线程才开始抢占锁，如果抢到，则继续执行`wait`后面的代码，直到退出同步代码块，释放监视器上的锁。
+
+下面这张图，形象的描述了整个过程：
+
+![|center](http://dl.iteye.com/upload/picture/pic/116721/3f19f0fb-33ae-322f-9f6a-035f0bf3a2d5.jpg)
+
+> 注意，不要使用String字符串或者是全局对象作为Monitor监视器对象，最好使用唯一对应的对象作为监视器。以免代码没有按照预期的运行，出现意想不到的意外。
+
+
+<br>
+**`ThreadLocal`**
+
+`ThreadLocal`是Java中一个比较特殊的类，虽然不同的线程执行同一段代码，访问同一个ThreadLocal对象，但是每个线程只能看到对应当前线程的保存在ThreadLocal中的实例。
+
+ThreadLocal实现原理：
+
+```java
+public class ThreadLocal<T> {
+    public void set(T value) {
+        Thread t = Thread.currentThread();
+        ThreadLocalMap map = getMap(t);
+        if (map != null)
+            map.set(this, value);
+        else
+            createMap(t, value);
+    }
+}
+
+```
+
 
 ----------
 
