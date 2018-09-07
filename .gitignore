@@ -9,16 +9,11 @@ mvnw.cmd
 .mvn/*
 .idea/*
 target/
-.project
-.classpath
 bin/
 
 ### STS ###
 .apt_generated
-.classpath
 .factorypath
-.project
-.settings
 .springBeans
 
 ### IntelliJ IDEA ###
