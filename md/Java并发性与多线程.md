@@ -241,6 +241,7 @@ private ThreadLocal myThreadLocal = new ThreadLocal<String>() {
 ![|right](https://github.com/root-wyj/java_think_in_deep/blob/master/md/images/threadlocalmap_class_outline.jpg)
 
 <br>
+
 下面看`ThreadLocal`源码：
 
 ```java
@@ -295,6 +296,7 @@ public class ThreadLocal<T> {
 ```
 
 <br>
+
 下面是`ThreadLocal.ThreadLocalMap`的源码：
 
 ```java
@@ -382,6 +384,7 @@ static class ThreadLocalMap {
 另外关于`threadLocalHashCode`: 每个ThreadLocal创建的时候，都会生成一个threadLocalHashCode与这个ThreadLocal对应，当在ThreadLocalMap中存储的ThreadLocal对象的时候，会根据`key.threadLocalHashCode & (len-1)`（就是根据此hashcode对table长度求余）来计算该ThreadLocal对象在tabel中存储的位置。如果碰撞了，就往后找，找到第一个剩余的空间，放进去。我们将这种解决hash冲突的方法叫做`线性探测`
 
 <br>
+
 下面看如何存值、取值的：
 
 ```java
@@ -435,6 +438,7 @@ private Entry getEntry(ThreadLocal<?> key) {
 ```
 
 <br>
+
 最后，new 一个 ThreadLocal对象的时候`nextHashCode()`到底怎么实现怎么来的，对于整个Hash是怎么优化的，怎么清理ThreadLocal弱引用失效后Entry中存储的value的，hash冲突之后，具体怎么线性探测的，怎么rehash的，这里就不细细研究了，可以参考[ThreadLocal源码解读](https://www.cnblogs.com/micrari/p/6790229.html)
 
 
