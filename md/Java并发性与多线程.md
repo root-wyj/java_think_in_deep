@@ -89,6 +89,7 @@
 我们以Java中多线程为前提。
 
 <br>
+
 **`谁会有问题`**
 
 就是说在Java多线程执行过程中，谁会出现与我们预料中不一样的结果。
@@ -99,11 +100,13 @@
 
 
 <br>
+
 **`为什么会出现问题`**
 
 详细请看[Java内存模型]
 
 <br>
+
 **`怎么解决问题`**
 
 Java提供了两种基本的解决方法：
@@ -116,6 +119,7 @@ Java提供了两种基本的解决方法：
 上文，主要介绍了Java中如何应对多线程，保证共享变量的数据一致性。下面介绍一下通用的方法，就是应该从那几个方面考虑。
 
 <br>
+
 **`线程之间如何通信及线程之间如何同步`**
 
 **通信是指线程之间以何种机制来交换信息。线程之间的通信机制有两种：`共享内存`和`消息传递`。**
@@ -130,6 +134,7 @@ Java提供了两种基本的解决方法：
 Java中，线程间通信是通过共享内存的方式实现的。
 
 <br>
+
 **`处理共享状态的几种思路`**
 
 撇开Java，通常来讲，防止并发导致的数据不一致的方法有哪些？
@@ -170,17 +175,20 @@ Java中，线程间通信是通过共享内存的方式实现的。
 ## Java中线程间基本同步方式
 
 <br>
+
 **`volatile` 关键字**
 [深入理解Java中的volatile关键字](http://www.hollischuang.com/archives/2648)
 
 [再有人问你volatile是什么，把这篇文章也发给他。](http://www.hollischuang.com/archives/2673)
 
 <br>
+
 **`synchronized` 关键字**
 [再有人问你synchronized是什么，就把这篇文章发给他。](http://www.hollischuang.com/archives/2637)
 
 
 <br>
+
 **`CAS` 原子操作**
 
 `CAS(Compare And Swap)`现在操作系统已经提供了这样操作的原子指令。
@@ -188,6 +196,7 @@ Java中，线程间通信是通过共享内存的方式实现的。
 这也是一种乐观锁的实现，将修改前的值与现在的值比较，相同则改成目标值，不相同再重新读取并修改，然后再将修改前的值与现在的值比较，相同则改成目标值，如此循环，直到该成功为止。这也是乐观锁的实现方式。
 
 <br>
+
 **`wait 与 notify`**
 
 `wait notify notifyAll`都必须要在同步代码块`synchronized`中执行。
@@ -202,9 +211,11 @@ JVM在调用wait等方法的时候，首先会检查当前线程是否是锁的�
 
 > 注意，不要使用String字符串或者是全局对象作为Monitor监视器对象，最好使用唯一对应的对象作为监视器。以免代码没有按照预期的运行，出现意想不到的意外。
 
-
 <br>
-**`ThreadLocal`**
+
+---------
+
+## ThreadLocal
 
 `ThreadLocal`是Java中一个比较特殊的类，虽然不同的线程执行同一段代码，访问同一个ThreadLocal对象，但是每个线程只能看到对应当前线程的保存在ThreadLocal中的实例。
 
@@ -233,7 +244,7 @@ private ThreadLocal myThreadLocal = new ThreadLocal<String>() {
 
 另外一个需要注意**Thread中的ThreadLocal.ThreadLocalMap类型的成员变量threadLocals**里面有一个table数组，table数组中存储了`Entry extend WeakReference<ThreadLocal<?>>`对象，key 就是弱引用的ThreadLocal，value就是需要存储的对象。
 
-也就是说，`ThreadLocalMap`存储的ThreadLocal的弱引用。如果使用传统的key-value来存储，就会造成ThreadLocal对象和名义上存在ThreadLocal对象中实际存在ThreadLocalMap中的value对象与线程强绑定，就是，如果线程不销毁，引用就会一直存在，而实际上是如果ThreadLocal对象已经不可达，那么就没办法再获取到ThreadLocal中存储的对象，其实这时候就已经该销毁ThreadLocal对象已经value对象了，所以使用了弱引用。而且一般的线程都会是在线程池中复用的，并不会使用了之后马上销毁该线程，所以，使用这种弱引用来保存ThreadLocal对象。而且，ThreadLocal对象失效，也仅仅是Entry中获取到的key为null，value对象并没有释放，所以，ThreadLocalMap还有一大堆机制和方法在ThreadLocal失效之后，来清除value对象的引用，从而让value对象也能释放。
+也就是说，`ThreadLocalMap`存储的ThreadLocal的弱引用。如果使用传统的key-value来存储，就会造成ThreadLocal对象和名义上存在ThreadLocal对象中实际存在ThreadLocalMap中的value对象与线程强绑定，就是，如果线程不销毁，引用就会一直存在，而实际上是如果ThreadLocal对象已经不可达，那么就没办法再获取到ThreadLocal中存储的对象，其实这时候就已经该销毁ThreadLocal对象已经value对象了，所以使用了弱引用。而且一般的线程都会是在线程池中复用的，并不会使用了之后马上销毁该线程，所以，使用这种弱引用来保存ThreadLocal对象。而且，ThreadLocal对象失效，也仅仅是Entry中获取到的key为null，value对象并没有释放，所以，ThreadLocalMap还有一大堆机制和方法在ThreadLocal失效之后，来清除value对象的引用，从而让value对象也能释放。所以在不用的时候，记着调用`remove`方法
 
 了解了整个`ThreadLocal`和`ThreadLocal.ThreadLocalMap`的思路，首先看下outline：
 
