@@ -296,6 +296,7 @@ public class ThreadLocal<T> {
 
 <br>
 下面是`ThreadLocal.ThreadLocalMap`的源码：
+
 ```java
 // 先看看保存ThreadLocal弱引用和value对象的Entry
 static class Entry extends WeakReference<java.lang.ThreadLocal<?>> {
@@ -382,6 +383,7 @@ static class ThreadLocalMap {
 
 <br>
 下面看如何存值、取值的：
+
 ```java
 private void set(ThreadLocal<?> key, Object value) {
 
