@@ -458,7 +458,31 @@ private Entry getEntry(ThreadLocal<?> key) {
 ----------
 
 ## 锁
+
 [深入理解多线程（五）—— Java虚拟机的锁优化技术](http://www.hollischuang.com/archives/2344)
+
+<br>
+
+-------
+
+### 剖析同步器
+
+
+
+<br>
+
+--------
+
+## 非阻塞算法
+
+CAS?
+
+
+<br>
+
+--------
+
+## 阿姆达尔定律
 
 ---------
 
