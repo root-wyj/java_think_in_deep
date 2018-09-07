@@ -208,21 +208,232 @@ JVM在调用wait等方法的时候，首先会检查当前线程是否是锁的�
 
 `ThreadLocal`是Java中一个比较特殊的类，虽然不同的线程执行同一段代码，访问同一个ThreadLocal对象，但是每个线程只能看到对应当前线程的保存在ThreadLocal中的实例。
 
-ThreadLocal实现原理：
+基本使用：
+
+```Java
+private ThreadLocal myThreadLocal1 = new ThreadLocal<String>();
+myThreadLocal1.set("Hello ThreadLocal");
+String threadLocalValues = myThreadLocal.get();
+
+//另外初始化的时候还可以通过重写`initialValue`为ThreadLocal指定初始值
+//调用set方法前，调用get方法所有线程看到的都是此初始值。
+private ThreadLocal myThreadLocal = new ThreadLocal<String>() {
+   @Override protected String initialValue() {
+       return "This is the initial value";
+   }
+};
+
+```
+
+实现思路：
+
+`Thread`类有一个类型为`ThreadLocal.ThreadLocalMap`的实例变量`threadLocals`，也就是说**每个线程有一个自己的`ThreadLocalMap`**。`ThreadLocalMap`有自己的独立实现，可以简单地将它的**key视作ThreadLocal，value为代码中放入的值**（实际上key并不是ThreadLocal本身，而*是它的一个弱引用*）。**每个线程在往某个ThreadLocal里塞值的时候，都会往自己的ThreadLocalMap里存，读也是以某个ThreadLocal作为引用，在自己的map里找对应的key，从而实现了线程隔离。**
+
+其实整个ThreadLocal实现的重点就是`ThreadLocal.ThreadLocalMap`。
+
+另外一个需要注意**Thread中的ThreadLocal.ThreadLocalMap类型的成员变量threadLocals**里面有一个table数组，table数组中存储了`Entry extend WeakReference<ThreadLocal<?>>`对象，key 就是弱引用的ThreadLocal，value就是需要存储的对象。
+
+也就是说，`ThreadLocalMap`存储的ThreadLocal的弱引用。如果使用传统的key-value来存储，就会造成ThreadLocal对象和名义上存在ThreadLocal对象中实际存在ThreadLocalMap中的value对象与线程强绑定，就是，如果线程不销毁，引用就会一直存在，而实际上是如果ThreadLocal对象已经不可达，那么就没办法再获取到ThreadLocal中存储的对象，其实这时候就已经该销毁ThreadLocal对象已经value对象了，所以使用了弱引用。而且一般的线程都会是在线程池中复用的，并不会使用了之后马上销毁该线程，所以，使用这种弱引用来保存ThreadLocal对象。而且，ThreadLocal对象失效，也仅仅是Entry中获取到的key为null，value对象并没有释放，所以，ThreadLocalMap还有一大堆机制和方法在ThreadLocal失效之后，来清除value对象的引用，从而让value对象也能释放。
+
+了解了整个`ThreadLocal`和`ThreadLocal.ThreadLocalMap`的思路，首先看下outline：
+
+![|left](https://github.com/root-wyj/java_think_in_deep/blob/master/md/images/threadlocal_class_outline.jpg)
+![|right](https://github.com/root-wyj/java_think_in_deep/blob/master/md/images/threadlocalmap_class_outline.jpg)
+
+<br>
+下面看`ThreadLocal`源码：
 
 ```java
+//保存在Thread类中的ThreadLocal.ThreadLocalMap 成员变量
+public class Thread implements Runnable {
+    /* ThreadLocal values pertaining to this thread. This map is maintained
+     * by the ThreadLocal class. */
+    ThreadLocal.ThreadLocalMap threadLocals = null;
+
+}
+
+//ThreadLocal 类
 public class ThreadLocal<T> {
+
+    //先看set方法
     public void set(T value) {
         Thread t = Thread.currentThread();
         ThreadLocalMap map = getMap(t);
         if (map != null)
+            //调用的ThreadLocalMap的set方法
             map.set(this, value);
         else
             createMap(t, value);
     }
+
+    //getMap方法就是直接返回Thread中的ThreadLocalMap成员变量
+    ThreadLocalMap getMap(Thread t) {
+        return t.threadLocals;
+    }
+
+    //get方法
+    public T get() {
+        Thread t = Thread.currentThread();
+        ThreadLocalMap map = getMap(t);
+        if (map != null) {
+            //首先先得到Entry也就是以ThreadLocal为key，value为value的保存数据的对象
+            ThreadLocalMap.Entry e = map.getEntry(this);
+            if (e != null) {
+                //说明弱引用还没有被回收
+                @SuppressWarnings("unchecked")
+                T result = (T)e.value;
+                return result;
+            }
+        }
+
+        //返回 之前实例化ThreadLoca对象时， 重写`protected String initialValue()`设置的默认值
+        return setInitialValue();
+    }
+
 }
 
 ```
+
+<br>
+下面是`ThreadLocal.ThreadLocalMap`的源码：
+```java
+// 先看看保存ThreadLocal弱引用和value对象的Entry
+static class Entry extends WeakReference<java.lang.ThreadLocal<?>> {
+    // 往ThreadLocal里实际塞入的值
+    Object value;
+
+    Entry(java.lang.ThreadLocal<?> k, Object v) {
+        super(k);
+        value = v;
+    }
+}
+
+static class ThreadLocalMap {
+    /**
+        * The initial capacity -- MUST be a power of two.
+        */
+    private static final int INITIAL_CAPACITY = 16;
+
+    /**
+        * The table, resized as necessary.
+        * table.length MUST always be a power of two.
+        */
+    private Entry[] table;
+
+    /**
+        * The number of entries in the table.
+        */
+    private int size = 0;
+
+    /**
+        * The next size value at which to resize.
+        */
+    private int threshold; // Default to 0
+
+    /**
+        * Set the resize threshold to maintain at worst a 2/3 load factor.
+        */
+    private void setThreshold(int len) {
+        threshold = len * 2 / 3;
+    }
+
+    private static int nextIndex(int i, int len) {
+        return ((i + 1 < len) ? i + 1 : 0);
+    }
+
+    /**
+    * 构造一个包含firstKey和firstValue的map。
+    * ThreadLocalMap是惰性构造的，所以只有当至少要往里面放一个元素的时候才会构建它。
+    */
+
+    ThreadLocalMap(ThreadLocal<?> firstKey, Object firstValue) {
+        // 初始化table数组
+        table = new Entry[INITIAL_CAPACITY];
+        // 用firstKey的threadLocalHashCode与初始大小16取模得到哈希值
+        int i = firstKey.threadLocalHashCode & (INITIAL_CAPACITY - 1);
+        table[i] = new Entry(firstKey, firstValue);
+        // 设置节点表大小为1
+        size = 1;
+        // 设定扩容阈值
+        setThreshold(INITIAL_CAPACITY);
+    }
+
+    /**
+     * ThreadLocals rely on per-thread linear-probe hash maps attached
+     * to each thread (Thread.threadLocals and
+     * inheritableThreadLocals).  The ThreadLocal objects act as keys,
+     * searched via threadLocalHashCode.  This is a custom hash code
+     * (useful only within ThreadLocalMaps) that eliminates collisions
+     * in the common case where consecutively constructed ThreadLocals
+     * are used by the same threads, while remaining well-behaved in
+     * less common cases.
+     * 
+     */
+    private final int threadLocalHashCode = nextHashCode();
+}
+
+```
+
+从上面可以看到，`ThreadLocalMap`是通过一个环形的数组保存Entry对象的。Entry对象中保存了ThreadLocal的弱引用对象，和value。并且这个数组的负载因子的2/3，扩容是*2。table结构看起来如下：
+
+![|center](https://images2015.cnblogs.com/blog/584724/201705/584724-20170501020337211-761293878.png)
+
+另外关于`threadLocalHashCode`: 每个ThreadLocal创建的时候，都会生成一个threadLocalHashCode与这个ThreadLocal对应，当在ThreadLocalMap中存储的ThreadLocal对象的时候，会根据`key.threadLocalHashCode & (len-1)`（就是根据此hashcode对table长度求余）来计算该ThreadLocal对象在tabel中存储的位置。如果碰撞了，就往后找，找到第一个剩余的空间，放进去。我们将这种解决hash冲突的方法叫做`线性探测`
+
+<br>
+下面看如何存值、取值的：
+```java
+private void set(ThreadLocal<?> key, Object value) {
+
+    // We don't use a fast path as with get() because it is at
+    // least as common to use set() to create new entries as
+    // it is to replace existing ones, in which case, a fast
+    // path would fail more often than not.
+
+    Entry[] tab = table;
+    int len = tab.length;
+    int i = key.threadLocalHashCode & (len-1);
+
+    //因为是根据哈希算法算出index 然后再线性探测
+    for (Entry e = tab[i];
+            e != null;
+            e = tab[i = nextIndex(i, len)]) {
+        ThreadLocal<?> k = e.get();
+
+        //找到了
+        if (k == key) {
+            e.value = value;
+            return;
+        }
+
+        //替换失效的entry
+        if (k == null) {
+            replaceStaleEntry(key, value, i);
+            return;
+        }
+    }
+
+    tab[i] = new Entry(key, value);
+    int sz = ++size;
+    //是否需要清理，以及是否需要rehash
+    if (!cleanSomeSlots(i, sz) && sz >= threshold)
+        rehash();
+}
+
+private Entry getEntry(ThreadLocal<?> key) {
+    int i = key.threadLocalHashCode & (table.length - 1);
+    Entry e = table[i];
+    // 对应的entry存在且未失效且弱引用指向的ThreadLocal就是key，则命中返回
+    if (e != null && e.get() == key)
+        return e;
+    else
+        // 没有找到，但是很可能存到了后面，所以去找找看
+        return getEntryAfterMiss(key, i, e);
+}
+```
+
+<br>
+最后，new 一个 ThreadLocal对象的时候`nextHashCode()`到底怎么实现怎么来的，对于整个Hash是怎么优化的，怎么清理ThreadLocal弱引用失效后Entry中存储的value的，hash冲突之后，具体怎么线性探测的，怎么rehash的，这里就不细细研究了，可以参考[ThreadLocal源码解读](https://www.cnblogs.com/micrari/p/6790229.html)
 
 
 ----------
