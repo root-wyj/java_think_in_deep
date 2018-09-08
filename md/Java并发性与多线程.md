@@ -459,6 +459,114 @@ private Entry getEntry(ThreadLocal<?> key) {
 
 ## 锁
 
+锁的实现：
+
+[普通锁](https://github.com/root-wyj/java_think_in_deep/blob/master/threads_and_concurrency/src/com/wyj/threadsconcurrency/lock/BasicLock.java)
+
+[公平锁](https://github.com/root-wyj/java_think_in_deep/blob/master/threads_and_concurrency/src/com/wyj/threadsconcurrency/lock/FairLock.java)
+
+[可重入读写锁](https://github.com/root-wyj/java_think_in_deep/blob/master/threads_and_concurrency/src/com/wyj/threadsconcurrency/lock/readwrite/ReadWriteLock2.java)
+
+[信号量](https://github.com/root-wyj/java_think_in_deep/blob/master/threads_and_concurrency/src/com/wyj/threadsconcurrency/lock/Semaphore.java)
+
+### 管程嵌套锁死
+
+`管程嵌套锁死`相当于死锁。一般出现在需要将两个不同的对象都作为锁的时候出现的。
+
+例如下面的例子：
+
+```java
+
+//lock implementation with nested monitor lockout problem
+public class Lock{
+	protected MonitorObject monitorObject = new MonitorObject();
+	protected boolean isLocked = false;
+
+	public void lock() throws InterruptedException{
+		synchronized(this){
+			while(isLocked){
+				synchronized(this.monitorObject){
+					this.monitorObject.wait();
+				}
+			}
+			isLocked = true;
+		}
+	}
+
+	public void unlock(){
+		synchronized(this){
+			this.isLocked = false;
+			synchronized(this.monitorObject){
+				this.monitorObject.notify();
+			}
+		}
+	}
+}
+```
+
+整个过程如下：
+- 线程1获得A对象的锁。
+- 线程1获得对象B的锁（同时持有对象A的锁）。
+- 线程1决定等待另一个线程的信号再继续。
+- 线程1调用B.wait()，从而释放了B对象上的锁，但仍然持有对象A的锁。
+- 线程2需要同时持有对象A和对象B的锁，才能向线程1发信号。
+- 线程2无法获得对象A上的锁，因为对象A上的锁当前正被线程1持有。
+- 线程2一直被阻塞，等待线程1释放对象A上的锁。
+- 线程1一直阻塞，等待线程2的信号，因此，不会释放对象A上的锁，而线程2需要对象A上的锁才能给线程1发信号……
+
+<br>
+大家可能会说，根本不会写出这么挫的代码，但其实，在公平锁的实现中，确实用到了两个对象来做同步，本对象来控制线程访问的同步，而与线程对应的对象负责阻塞线程。而这样的结构非常容易写出类似上面的代码。
+
+
+<br>
+
+---------------
+
+### Slipped Condition
+
+`Slipped conditions`，就是说， 从一个线程检查某一特定条件到该线程操作此条件期间，这个条件已经被其它线程改变，导致第一个线程在该条件上执行了错误的操作。这里有一个简单的例子：
+
+```java
+public class Lock {
+    private boolean isLocked = true;
+
+    public void lock(){
+      synchronized(this){
+        while(isLocked){
+          try{
+            this.wait();
+          } catch(InterruptedException e){
+            //do nothing, keep waiting
+          }
+        }
+      }
+
+      synchronized(this){
+        isLocked = true;
+      }
+    }
+
+    public synchronized void unlock(){
+      isLocked = false;
+      this.notify();
+    }
+}
+```
+
+上面，lock()方法包含了两个同步块。第一个同步块执行wait操作直到isLocked变为false才退出，第二个同步块将isLocked置为true，以此来锁住这个Lock实例避免其它线程通过lock()方法。
+
+在写多线程代码的时候，**我们完全可以这么想，在第二个同步代码块和第一个同步代码块之间，有N多个线程来竞争进入第二个同步代码块，这时候很快就会发现问题，刚刚从第一个同步代码块下来的线程已经不一定是操作第二个同步代码块的线程了**，在这里就会发现这是有问题的。
+
+所以再出现这种问题的时候，**要保证通过第一个同步代码块来到第二个同步代码块的线程的状态都是一致的。而且操作的对象是和线程相关(或者叫线程隔离的)的或者是线程间排斥的。**这样谁操作都可以，只是顺序的问题。
+
+其实上面的内容都可以仔细去研究[公平锁](https://github.com/root-wyj/java_think_in_deep/blob/master/threads_and_concurrency/src/com/wyj/threadsconcurrency/lock/FairLock.java)的实现就可以总结出这些结论。
+
+<br>
+
+-------------
+
+### 锁优化
+
 [深入理解多线程（五）—— Java虚拟机的锁优化技术](http://www.hollischuang.com/archives/2344)
 
 <br>
@@ -467,7 +575,83 @@ private Entry getEntry(ThreadLocal<?> key) {
 
 ### 剖析同步器
 
+虽然许多同步器（如锁，信号量，阻塞队列等）功能上各不相同，但它们的内部设计上却差别不大。换句话说，它们内部的的基础部分是相同（或相似）的。
 
+大部分同步器**都是用来保护某个区域（临界区）的代码，这些代码可能会被多线程并发访问**。要实现这个目标，同步器一般要支持下列功能：
+
+1. 状态
+2. 访问条件
+3. 通知策略
+4. Test-and-Set方法
+5. Set方法
+
+但，并不是所有的同步器都包含上述内容，有些并不完全遵照上面的内容，但是总能发现其中的一个或多个。
+
+<br>
+
+**`状态`**
+
+**同步器中的状态是用来确定某个线程是否有访问权限。**在Lock中，状态是boolean类型的，表示当前Lock对象是否处于锁定状态。在BoundedSemaphore中，内部状态包含一个计数器（int类型）和一个上限（int类型），分别表示当前已经获取的许可数和最大可获取的许可数。BlockingQueue的状态是该队列中元素列表以及队列的最大容量
+
+<br>
+
+**`访问条件`**
+
+**访问条件决定调用test-and-set-state方法的线程是否可以对状态进行设置。访问条件一般是基于同步器状态的。通常是放在一个while循环里，以避免虚假唤醒问题。访问条件的计算结果要么是true要么是false。**
+
+Lock中的访问条件只是简单地检查isLocked的值。根据执行的动作是“获取”还是“释放”，BoundedSemaphore中实际上有两个访问条件。如果某个线程想“获取”许可，将检查signals变量是否达到上限；如果某个线程想“释放”许可，将检查signals变量是否为0。
+
+<br>
+
+**`状态变化`**
+
+**一旦一个线程获得了临界区的访问权限，它得改变同步器的状态，让其它线程阻塞，防止它们进入临界区。换而言之，这个状态表示正有一个线程在执行临界区的代码。其它线程想要访问临界区的时候，该状态应该影响到访问条件的结果。**
+
+在Lock中，通过代码设置isLocked = true来改变状态，在信号量中，改变状态的是signals–或signals++;
+
+
+<br>
+
+**`通知策略`**
+
+一旦某个线程改变了同步器的状态，可能需要通知其它等待的线程状态已经变了。因为也许这个状态的变化会让其它线程的访问条件变为true。
+
+
+通知策略通常分为三种：
+
+- 通知所有等待的线程
+- 通知N个等待线程中的任意一个
+- 通知N个等待线程中的某个指定的线程
+
+有时候可能需要通知指定的线程而非任意一个等待的线程。例如，如果你想保证线程被通知的顺序与它们进入同步块的顺序一致，或按某种优先级的顺序来通知。想要实现这种需求，每个等待的线程必须在其自有的对象上调用wait()。当通知线程想要通知某个特定的等待线程时，调用该线程自有对象的notify()方法即可
+
+<br>
+
+**`Test-and-Set方法`**
+
+同步器中最常见的有两种类型的方法，test-and-set是第一种（set是另一种）。**Test-and-set的意思是，调用这个方法的线程检查访问条件，如若满足，该线程设置同步器的内部状态来表示它已经获得了访问权限。**
+
+**test-and-set很有必要是原子的**，也就是说在某个线程检查和设置状态期间，不允许有其它线程在test-and-set方法中执行。
+
+test-and-set方法的程序流通常遵照下面的顺序：
+
+- 如有必要，在检查前先设置状态
+- 检查访问条件
+- 如果访问条件不满足，则等待
+- 如果访问条件满足，设置状态，如有必要还要通知等待线程
+
+
+
+<br>
+
+**`set方法`**
+
+set方法是同步器中常见的第二种方法。**set方法仅是设置同步器的内部状态，而不先做检查。**set方法的一个典型例子是Lock类中的unlock()方法。持有锁的某个线程总是能够成功解锁，而不需要检查该锁是否处于解锁状态。
+
+set方法的程序流通常如下：
+
+- 设置内部状态
+- 通知等待的线程
 
 <br>
 
