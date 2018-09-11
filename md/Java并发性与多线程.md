@@ -174,6 +174,9 @@ Java中，线程间通信是通过共享内存的方式实现的。
 
 ## Java中线程间基本同步方式
 
+http://ifeve.com/java-concurrent-hashmap-1/
+源码分析 ConcurrentHashMap
+
 <br>
 
 **`volatile` 关键字**
