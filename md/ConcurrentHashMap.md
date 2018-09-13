@@ -499,6 +499,8 @@ static final <K,V> void setTabAt(Node<K,V>[] tab, int i, Node<K,V> v) {
 -----------
 
 
+> attention!!! **`看源码是为了习得其中的编程思想： 比如说 初始化时的懒加载；使用CAS + while-true实现乐观锁，保证高并发；使用CAS + volatile保证某个代码块只执行一次；使用Unsafe和静态常量和静态代码块从内存上直接操作，保证操作的原子性和可见性；使用锁表元素的思想实现真正的高并发；使用多线程扩容技术；为保证高效，计算均使用移位操作`**
+
 
 参考文献：
 1. [HashMap? ConcurrentHashMap? 相信看完这篇没人能难住你！](http://ifeve.com/hashmap-concurrenthashmap-%E7%9B%B8%E4%BF%A1%E7%9C%8B%E5%AE%8C%E8%BF%99%E7%AF%87%E6%B2%A1%E4%BA%BA%E8%83%BD%E9%9A%BE%E4%BD%8F%E4%BD%A0%EF%BC%81/#more-39622)
