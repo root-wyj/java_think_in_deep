@@ -465,7 +465,7 @@ static final <K,V> void setTabAt(Node<K,V>[] tab, int i, Node<K,V> v) {
 
 具体的代码就不贴了，很长。下面根据这张图来看一下：
 
-![|center](https://img-blog.csdn.net/20150826185956485?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQv/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
+![|center](https://github.com/root-wyj/java_think_in_deep/blob/master/md/images/concurrenthashmap_%E6%89%A9%E5%AE%B9.jpg)
 
 详细的源码分析可以看[ConcurrentHashMap源码解析（jdk1.8）](https://blog.csdn.net/programmer_at/article/details/79715177#14-table-%E6%89%A9%E5%AE%B9)
 
@@ -507,5 +507,4 @@ static final <K,V> void setTabAt(Node<K,V>[] tab, int i, Node<K,V> v) {
 2. [ConcurrentHashMap源码解析（jdk1.8）](https://blog.csdn.net/programmer_at/article/details/79715177)
 3. [ConcurrentHashMap源码分析（JDK8版本）](https://blog.csdn.net/u010723709/article/details/48007881)
 4. [ConcurrentHashMap 在1.7与1.8中的不同](https://www.jianshu.com/p/e694f1e868ec)
-5. 
 
