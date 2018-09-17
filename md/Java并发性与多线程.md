@@ -696,17 +696,32 @@ CAS?
 
 ## AQS -- AbstractQueuedSynchronizer
 
-在看了N多遍源码和实现的例子之后，还是没明白到底怎么使用，到底是怎样的内部流程。（注意，我没有看原本的接口文档。。。）
+在看了N多遍源码和实现的例子之后，还是没明白到底怎么使用，到底是怎样的内部流程。（注意，我没有看原本的接口文档。。。）下面是了解的一些东西：
 
+提供了一个基于FIFO队列，可以用于构建锁或者其他相关同步装置的基础框架。该同步器（以下简称同步器）利用了一个int来表示状态，期望它能够成为实现大部分同步需求的基础。使用的方法是继承，子类通过继承同步器并需要实现它的方法来管理其状态，管理的方式就是通过类似acquire和release的方式来操纵状态。
 
+子类推荐被定义为自定义同步装置的内部类，同步器自身没有实现任何同步接口，它仅仅是定义了若干acquire之类的方法来供使用。该同步器即可以作为排他模式也可以作为共享模式，当它被定义为一个排他模式时，其他线程对其的获取就被阻止，而共享模式对于多个线程获取都可以成功。
 
-http://www.blogjava.net/xylz/archive/2010/07/06/325390.html
+**同步器是实现锁的关键，利用同步器将锁的语义实现，然后在锁的实现中聚合同步器。**可以这样理解：锁的API是面向使用者的，它定义了与锁交互的公共行为，而每个锁需要完成特定的操作也是透过这些行为来完成的（比如：可以允许两个线程进行加锁，排除两个以上的线程），但是实现是依托给同步器来完成；同步器面向的是线程访问和资源控制，它定义了线程对资源是否能够获取以及线程的排队等操作。锁和同步器很好的隔离了二者所需要关注的领域，严格意义上讲，同步器可以适用于除了锁以外的其他同步设施上（包括锁）。
+
+AbstractQueuedSynchronizer是CountDownLatch/ReentrantLock/RenntrantReadWriteLock/Semaphore的基础，因此AbstractQueuedSynchronizer是Lock/Executor实现的前提
+
+---------
+
+<br>
+
+- [AbstractQueuedSynchronizer的介绍和原理分析](http://ifeve.com/introduce-abstractqueuedsynchronizer/) 比较全面的分析了`AbstractQueuedSynchronizer`的应用，原理，也分析了共享和排他两种使用方式的源码。
+- [深入浅出 Java Concurrency (7): 锁机制 part 2 AQS](http://www.blogjava.net/xylz/archive/2010/07/06/325390.html) 主要介绍了他的原理。随后的[深入浅出 Java Concurrency (8): 锁机制 part 3](http://www.blogjava.net/xylz/archive/2010/07/07/325410.html)以`ReentrantLock`为例分析了源码和怎么使用。
+- [java condition使用及分析](https://blog.csdn.net/bohu83/article/details/51098106)从`Condition`的角度分析了一些AQS，可以作为参考。
+- git上也有我写的[例子](https://github.com/root-wyj/java_think_in_deep/tree/master/threads_and_concurrency/src/com/wyj/threadsconcurrency/aqs)
 
 <br>
 
 --------
 
 ## Condition
+
+- [Java并发与锁设计实现详述（11）- Java中的Condition](https://blog.csdn.net/majinggogogo/article/details/80034585)介绍了Condition的基本使用。
 
 http://www.blogjava.net/xylz/archive/2010/07/08/325540.html
 
@@ -724,7 +739,7 @@ http://www.blogjava.net/xylz/archive/2010/07/08/325540.html
 
 --------
 
-## final 关键字在同步 多线程中的作用
+## final 关键字在同步 多线程中的作用，尤其是初始化对象的成员变量如果申明为final会怎样
 
 
 ## 阿姆达尔定律
