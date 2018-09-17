@@ -178,6 +178,12 @@ Java中，线程间通信是通过共享内存的方式实现的。
 
 **`volatile` 关键字**
 
+`volatile`关键字的两个语义：
+- **`保证此变量对所有线程的可见性`**
+- **`禁止指令重排`**
+
+关于以上两点特性，详细可以看这篇文章[你应该知道的 volatile 关键字](http://ifeve.com/%E4%BD%A0%E5%BA%94%E8%AF%A5%E7%9F%A5%E9%81%93%E7%9A%84-volatile-%E5%85%B3%E9%94%AE%E5%AD%97/)
+
 [深入理解Java中的volatile关键字](http://www.hollischuang.com/archives/2648)
 
 [再有人问你volatile是什么，把这篇文章也发给他。](http://www.hollischuang.com/archives/2673)
