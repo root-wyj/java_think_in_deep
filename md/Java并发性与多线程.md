@@ -721,9 +721,8 @@ AbstractQueuedSynchronizer是CountDownLatch/ReentrantLock/RenntrantReadWriteLock
 
 ## Condition
 
-- [Java并发与锁设计实现详述（11）- Java中的Condition](https://blog.csdn.net/majinggogogo/article/details/80034585)介绍了Condition的基本使用。
-
-http://www.blogjava.net/xylz/archive/2010/07/08/325540.html
+- [Java并发与锁设计实现详述（11）- Java中的Condition](https://blog.csdn.net/majinggogogo/article/details/80034585)介绍了Condition的基本使用。我也写了一个[基本实现](https://github.com/root-wyj/java_think_in_deep/blob/master/threads_and_concurrency/src/com/wyj/threadsconcurrency/BoundedQueue.java)。都是参照文档上的实现来的。而且`ArrayBlockingQueue`就是使用的这种方式，锁+Condition
+- [java condition使用及分析](https://blog.csdn.net/bohu83/article/details/51098106) 详细的介绍了`Condition`，而且结合AQS中的使用，分析了AQS中的AQS等待队列和Condition等待队列。
 
 
 <br>
