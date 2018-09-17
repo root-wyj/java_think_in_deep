@@ -1,6 +1,8 @@
 # Java并发性与多线程
 @(深入理解Java)[并发,多线程,concurrenct,lock,锁]
 
+[Java doc 包综述](https://docs.oracle.com/javase/9/docs/api/java/util/concurrent/package-summary.html)
+
 ## 了解多线程
 
 单CPU在同一时间只能执行一个线程上的任务，但是在单CPU上计算机也能在同一时间点执行多任务或多进程。虽然并不是严格意义上的“同一时间点”，而是多个任务共享一个CPU，CPU通过运行切换，使每个任务都能获得时间片运行，看起来就像是多个任务在同时进行。
@@ -729,9 +731,20 @@ AbstractQueuedSynchronizer是CountDownLatch/ReentrantLock/RenntrantReadWriteLock
 
 --------
 
+## AtomicInteger
+
+
+<br>
+
+----------
+
 ## 那5个东西
 
-
+- Semaphore is a classic concurrency tool.
+- CountDownLatch is a very simple yet very common utility for blocking until a given number of signals, events, or conditions hold.
+- A CyclicBarrier is a resettable multiway synchronization point useful in some styles of parallel programming.
+- A Phaser provides a more flexible form of barrier that may be used to control phased computation among multiple threads.
+- An Exchanger allows two threads to exchange objects at a rendezvous point, and is useful in several pipeline designs.
 
 
 <br>
@@ -749,3 +762,4 @@ AbstractQueuedSynchronizer是CountDownLatch/ReentrantLock/RenntrantReadWriteLock
 1. [Java并发性和多线程介绍目录](http://ifeve.com/java-concurrency-thread-directory/)
 2. [深入理解java内存模型系列文章](http://ifeve.com/java-memory-model-0/) 和 [《成神之路-基础篇》JVM——Java内存模型(已完结)](http://www.hollischuang.com/archives/1003) 结合起来看
 3. [为什么能有上百万个Goroutines，却只能有上千个Java线程？](http://www.infoq.com/cn/articles/a-million-go-routines-but-only-1000-java-threads?utm_campaign=rightbar_v2&utm_source=infoq&utm_medium=articles_link&utm_content=link_text)
+4. [聊聊并发系列文章](http://ifeve.com/talk-concurrency/) 这个资源可能有点老了
