@@ -669,6 +669,64 @@ CAS?
 
 --------
 
+## Fork and Join 框架
+
+就是将许多的任务化解为一堆堆的小任务，然后让每个线程对应一堆任务--我们叫做任务队列。这样一个线程执行一个任务队列，线程之间没有什么共享资源，减少了线程间的竞争。
+
+该框架还支持工作窃取，如果线程中的任务队列中已没有任务，将会去其他线程的任务队列中取任务执行。
+
+工作队列是一个双端队列，也是为了减少线程之间的资源竞争，来窃取工作的线程从队列的另一端开始取数据。
+
+任务子类：
+- `RecursiveAction` 用于没有返回结果的任务。
+- `RecursiveTask` 用于有返回结果的任务。
+
+使用：继承上述一个任务子类，实现相应的方法主体，但是最后任务的执行需要提交到`ForkJoinPool`中执行。具体可以看[这里](https://github.com/root-wyj/java_think_in_deep/blob/master/threads_and_concurrency/src/com/wyj/threadsconcurrency/forkjoin/ForkJoinTest.java)
+
+
+参考的文章：
+
+[java-forkjoin框架的使用](https://www.cnblogs.com/wenbronk/p/7228455.html)
+
+[聊聊并发（八）——Fork/Join框架介绍](http://ifeve.com/talk-concurrency-forkjoin/)
+
+<br>
+
+--------
+
+## AQS -- AbstractQueuedSynchronizer
+
+在看了N多遍源码和实现的例子之后，还是没明白到底怎么使用，到底是怎样的内部流程。（注意，我没有看原本的接口文档。。。）
+
+
+
+http://www.blogjava.net/xylz/archive/2010/07/06/325390.html
+
+<br>
+
+--------
+
+## Condition
+
+http://www.blogjava.net/xylz/archive/2010/07/08/325540.html
+
+
+<br>
+
+--------
+
+## 那5个东西
+
+
+
+
+<br>
+
+--------
+
+## final 关键字在同步 多线程中的作用
+
+
 ## 阿姆达尔定律
 
 ---------
