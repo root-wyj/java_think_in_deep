@@ -55,6 +55,34 @@ public ThreadPoolExecutor(int corePoolSize,
 
 <br>
 
+简单使用：
+
+```java
+public class TemplateMessageExecutorPool {
+
+    private ExecutorService executor;
+
+    @PostConstruct
+    public void init() {
+        executor = new ThreadPoolExecutor(
+                1,
+                10,
+                120L,
+                TimeUnit.SECONDS,
+                new LinkedBlockingQueue<>()
+        );
+    }
+
+    public void addTask(Runnable task) {
+        executor.submit(task);
+    }
+
+}
+
+```
+
+<br>
+
 ----------
 
 ### 丢弃策略
