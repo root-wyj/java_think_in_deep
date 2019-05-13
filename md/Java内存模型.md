@@ -202,4 +202,5 @@ public class LazySingleton {
 2. [Java内存模型](http://ifeve.com/java-memory-model-6/)（这是上面目录中少的这一篇）
 3. [JVM内存结构 VS Java内存模型 VS Java对象模型](http://www.hollischuang.com/archives/2509)
 4. [再有人问你Java内存模型是什么，就把这篇文章发给他。](http://www.hollischuang.com/archives/2550)
+5. [Java运行时内存](https://mp.weixin.qq.com/s/VDt9sVH4l_FKKAy-uqTjYg)
 
