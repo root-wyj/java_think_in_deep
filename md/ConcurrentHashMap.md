@@ -465,12 +465,12 @@ static final <K,V> void setTabAt(Node<K,V>[] tab, int i, Node<K,V> v) {
 
 具体的代码就不贴了，很长。下面根据这张图来看一下：
 
-![|center](https://github.com/root-wyj/java_think_in_deep/blob/master/md/images/concurrenthashmap_%E6%89%A9%E5%AE%B9.jpg)
+![|center](images/concurrenthashmap_扩容.jpg)
 
 详细的源码分析可以看[ConcurrentHashMap源码解析（jdk1.8）](https://blog.csdn.net/programmer_at/article/details/79715177#14-table-%E6%89%A9%E5%AE%B9)
 
 
-> 还有两部分**`count`的计算**，`clear、delete`删除元素，没有仔细分析。但是应该都是大同小异，和put中和扩容中使用的思想都差不多。
+> 还有两部分 **`count`的计算**，`clear、delete`删除元素，没有仔细分析。但是应该都是大同小异，和put中和扩容中使用的思想都差不多。
 
 
 
